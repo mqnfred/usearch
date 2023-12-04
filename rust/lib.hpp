@@ -17,7 +17,7 @@ class NativeIndex {
     using search_result_t = typename index_dense_t::search_result_t;
     using vector_key_t = typename index_dense_t::vector_key_t;
 
-    NativeIndex(std::unique_ptr<index_dense_t> index);
+    NativeIndex(std::shared_ptr<index_dense_t> index);
 
     void reserve(size_t) const;
 
@@ -63,7 +63,7 @@ class NativeIndex {
     void view_from_buffer(rust::Slice<uint8_t const> buffer) const;
 
   private:
-    std::unique_ptr<index_dense_t> index_;
+    std::shared_ptr<index_dense_t> index_;
 };
 
-std::unique_ptr<NativeIndex> new_native_index(IndexOptions const& options);
+std::shared_ptr<NativeIndex> new_native_index(IndexOptions const& options);

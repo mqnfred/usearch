@@ -24,7 +24,7 @@ template <typename scalar_at> Matches search_(index_dense_t& index, scalar_at co
     return matches;
 }
 
-NativeIndex::NativeIndex(std::unique_ptr<index_t> index) : index_(std::move(index)) {}
+NativeIndex::NativeIndex(std::shared_ptr<index_t> index) : index_(index) {}
 
 // clang-format off
 void NativeIndex::add_i8(vector_key_t key, rust::Slice<int8_t const> vec) const { index_->add(key, vec.data()).error.raise(); }
@@ -92,11 +92,9 @@ void NativeIndex::view_from_buffer(rust::Slice<uint8_t const> buffer) const {
     index_->view(memory_mapped_file_t((byte_t*)buffer.data(), buffer.size())).error.raise();
 }
 
-std::unique_ptr<NativeIndex> wrap(index_t&& index) {
-    std::unique_ptr<index_t> punned_ptr;
-    punned_ptr.reset(new index_t(std::move(index)));
-    std::unique_ptr<NativeIndex> result;
-    result.reset(new NativeIndex(std::move(punned_ptr)));
+std::shared_ptr<NativeIndex> wrap(index_t&& index) {
+    auto punned_ptr = std::make_shared<index_t>(std::move(index));
+    auto result = std::make_shared<NativeIndex>(punned_ptr);
     return result;
 }
 
@@ -126,7 +124,7 @@ scalar_kind_t rust_to_cpp_scalar(ScalarKind value) {
     }
 }
 
-std::unique_ptr<NativeIndex> new_native_index(IndexOptions const& options) {
+std::shared_ptr<NativeIndex> new_native_index(IndexOptions const& options) {
     metric_kind_t metric_kind = rust_to_cpp_metric(options.metric);
     scalar_kind_t scalar_kind = rust_to_cpp_scalar(options.quantization);
     metric_punned_t metric(options.dimensions, metric_kind, scalar_kind);

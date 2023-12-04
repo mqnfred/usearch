@@ -52,7 +52,7 @@ pub mod ffi {
         pub fn change_expansion_add(self: &NativeIndex, n: usize) -> Result<()>;
         pub fn change_expansion_search(self: &NativeIndex, n: usize) -> Result<()>;
 
-        pub fn new_native_index(options: &IndexOptions) -> Result<UniquePtr<NativeIndex>>;
+        pub fn new_native_index(options: &IndexOptions) -> Result<SharedPtr<NativeIndex>>;
         pub fn reserve(self: &NativeIndex, capacity: usize) -> Result<()>;
         pub fn dimensions(self: &NativeIndex) -> usize;
         pub fn connectivity(self: &NativeIndex) -> usize;
@@ -92,9 +92,13 @@ pub mod ffi {
     }
 }
 
+#[derive(Clone)]
 pub struct Index {
-    inner: cxx::UniquePtr<ffi::NativeIndex>,
+    inner: cxx::SharedPtr<ffi::NativeIndex>,
 }
+
+unsafe impl Send for Index {}
+unsafe impl Sync for Index {}
 
 impl Default for ffi::IndexOptions {
     fn default() -> Self {
